@@ -11,6 +11,7 @@ import bootstrap from './main.server';
 import express from 'express';
 import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { SERVER_LANG_TOKEN } from './app/services/language.service';
 
 const serverDistFolder = dirname(fileURLToPath(import.meta.url));
 const browserDistFolder = resolve(serverDistFolder, '../browser');
@@ -60,6 +61,12 @@ app.use('/**', (req, res, next) => {
 app.get('*', (req, res, next) => {
   const { protocol, originalUrl, baseUrl, headers } = req;
 
+  const cookies = headers.cookie ?? '';
+  const langCookies =
+    cookies.split(';').find((cookie) => cookie.includes('lang')) ?? 'lang=en';
+
+  const [, lang] = langCookies.split('=');
+
   commonEngine
 
     .render({
@@ -77,6 +84,10 @@ app.get('*', (req, res, next) => {
         { provide: 'REQUEST', useValue: req },
 
         { provide: 'RESPONSE', useValue: res },
+        {
+          provide: SERVER_LANG_TOKEN,
+          useValue: lang,
+        },
       ],
     })
 
